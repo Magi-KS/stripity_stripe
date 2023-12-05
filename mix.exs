@@ -2,7 +2,7 @@ defmodule Stripe.Mixfile do
   use Mix.Project
 
   @source_url "https://github.com/code-corps/stripity_stripe"
-  @version "2.17.3-4"
+  @version "2.17.3-5"
 
   def project do
     [
