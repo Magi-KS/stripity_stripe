@@ -64,7 +64,10 @@ defmodule Stripe.Converter do
     promotion_code
     recipient
     refund
+    reporting.report_run
+    reporting.report_type
     review
+    search_result
     setup_intent
     sku
     source
@@ -77,6 +80,7 @@ defmodule Stripe.Converter do
     terminal.connection_token
     terminal.location
     terminal.reader
+    test_helpers.test_clock
     transfer
     transfer_reversal
     token

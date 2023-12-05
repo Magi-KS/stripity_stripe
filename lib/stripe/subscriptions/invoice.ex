@@ -8,6 +8,7 @@ defmodule Stripe.Invoice do
   - Retrieve an invoice
   - Update an invoice
   - Void an invoice
+  - Search invoices
 
   Does not take options yet.
 
@@ -80,7 +81,7 @@ defmodule Stripe.Invoice do
           subscription_proration_date: Stripe.timestamp() | nil,
           subtotal: integer,
           tax: integer | nil,
-          tax_percent: number | nil,
+          tax_rate: Stripe.id() | Stripe.TaxRate.t() | nil,
           threshold_reason:
             nil
             | %{
@@ -182,7 +183,7 @@ defmodule Stripe.Invoice do
     :subscription_proration_date,
     :subtotal,
     :tax,
-    :tax_percent,
+    :tax_rate,
     :threshold_reason,
     :total,
     :total_discount_amounts,
@@ -205,8 +206,10 @@ defmodule Stripe.Invoice do
   @spec create(params, Stripe.options()) :: {:ok, t} | {:error, Stripe.Error.t()}
         when params:
                %{
+                 optional(:account_tax_ids) => list(String.t()),
                  optional(:application_fee_amount) => integer,
                  optional(:auto_advance) => boolean,
+                 optional(:automatic_tax) => map,
                  optional(:collection_method) => String.t(),
                  :customer => Stripe.id() | Stripe.Customer.t(),
                  optional(:custom_fields) => custom_fields,
@@ -215,12 +218,13 @@ defmodule Stripe.Invoice do
                  optional(:default_source) => String.t(),
                  optional(:default_tax_rates) => [Stripe.id()],
                  optional(:description) => String.t(),
+                 optional(:discounts) => list(String.t()),
                  optional(:due_date) => Stripe.timestamp(),
                  optional(:footer) => String.t(),
                  optional(:metadata) => Stripe.Types.metadata(),
+                 optional(:payment_settings) => map,
                  optional(:statement_descriptor) => String.t(),
-                 optional(:subscription) => Stripe.id() | Stripe.Subscription.t(),
-                 optional(:tax_percent) => number
+                 optional(:subscription) => Stripe.id() | Stripe.Subscription.t()
                }
                | %{}
   def create(params, opts \\ []) do
@@ -259,21 +263,24 @@ defmodule Stripe.Invoice do
   @spec update(Stripe.id() | t, params, Stripe.options()) :: {:ok, t} | {:error, Stripe.Error.t()}
         when params:
                %{
+                 optional(:account_tax_ids) => list(String.t()),
                  optional(:application_fee_amount) => integer,
                  optional(:auto_advance) => boolean,
+                 optional(:automatic_tax) => map,
                  optional(:custom_fields) => custom_fields,
                  optional(:days_until_due) => integer,
                  optional(:default_payment_method) => String.t(),
                  optional(:default_source) => String.t(),
                  optional(:default_tax_rates) => [Stripe.id()],
                  optional(:description) => String.t(),
+                 optional(:discounts) => list(String.t()),
                  optional(:due_date) => Stripe.timestamp(),
                  optional(:footer) => String.t(),
                  optional(:forgiven) => boolean,
                  optional(:metadata) => Stripe.Types.metadata(),
                  optional(:paid) => boolean,
-                 optional(:statement_descriptor) => String.t(),
-                 optional(:tax_percent) => number
+                 optional(:payment_settings) => map,
+                 optional(:statement_descriptor) => String.t()
                }
                | %{}
   def update(id, params, opts \\ []) do
@@ -297,7 +304,10 @@ defmodule Stripe.Invoice do
   @spec upcoming(map, Stripe.options()) :: {:ok, t} | {:error, Stripe.Error.t()}
   def upcoming(params, opts \\ [])
   def upcoming(params = %{customer: _customer}, opts), do: get_upcoming(params, opts)
-  def upcoming(params = %{customer_details: _customer_details}, opts), do: get_upcoming(params, opts)
+
+  def upcoming(params = %{customer_details: _customer_details}, opts),
+    do: get_upcoming(params, opts)
+
   def upcoming(params = %{subscription: _subscription}, opts), do: get_upcoming(params, opts)
 
   defp get_upcoming(params, opts) do
@@ -337,6 +347,27 @@ defmodule Stripe.Invoice do
     |> put_method(:get)
     |> put_params(params)
     |> cast_to_id([:customer, :ending_before, :starting_after, :subscription])
+    |> make_request()
+  end
+
+  @doc """
+  Search invoices
+
+  See the [Stripe docs](https://stripe.com/docs/api/invoices/search).
+  """
+  @spec search(params, Stripe.options()) ::
+          {:ok, Stripe.SearchResult.t(t)} | {:error, Stripe.Error.t()}
+        when params: %{
+               :query => Stripe.search_query(),
+               optional(:limit) => 1..100,
+               optional(:page) => String.t()
+             }
+  def search(params, opts \\ []) do
+    new_request(opts)
+    |> prefix_expansions()
+    |> put_endpoint(@plural_endpoint <> "/search")
+    |> put_method(:get)
+    |> put_params(params)
     |> make_request()
   end
 

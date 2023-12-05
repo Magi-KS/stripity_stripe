@@ -80,27 +80,9 @@ defmodule Stripe.SubscriptionTest do
 
       assert_stripe_requested(:delete, "/v1/subscriptions/#{subscription.id}")
     end
-
-    test "with `at_period_end` is deprecated [since 2018-08-23]" do
-      assert {:ok, %Stripe.Subscription{} = subscription} =
-               Stripe.Subscription.delete("sub_123", %{at_period_end: true})
-
-      assert subscription.cancel_at_period_end
-
-      # The deprecated function acts as a facade for `cancel_at_period_end: true`.
-      assert_stripe_requested(:post, "/v1/subscriptions/#{subscription.id}")
-    end
   end
 
   describe "delete/3" do
-    test "with `at_period_end` is deprecated [since 2018-08-23]" do
-      assert {:ok, %Stripe.Subscription{cancel_at_period_end: true}} =
-               Stripe.Subscription.delete("sub_123", %{at_period_end: true}, [])
-
-      # The deprecated function acts as a facade for `cancel_at_period_end: true`.
-      assert_stripe_requested(:post, "/v1/subscriptions/sub_123")
-    end
-
     test "deletes a subscription with provided cancellation params" do
       params = %{invoice_now: true, prorate: true}
 
@@ -115,6 +97,19 @@ defmodule Stripe.SubscriptionTest do
     test "lists all subscriptions" do
       assert {:ok, %Stripe.List{data: subscriptions}} = Stripe.Subscription.list()
       assert_stripe_requested(:get, "/v1/subscriptions")
+      assert is_list(subscriptions)
+      assert %Stripe.Subscription{} = hd(subscriptions)
+    end
+  end
+
+  describe "search/2" do
+    test "searches subscriptions" do
+      query = "name:'fakename' AND metadata['foo']:'bar'"
+
+      assert {:ok, %Stripe.SearchResult{data: subscriptions}} =
+               Stripe.Subscription.search(%{query: query})
+
+      assert_stripe_requested(:get, "/v1/subscriptions/search", query: [query: query])
       assert is_list(subscriptions)
       assert %Stripe.Subscription{} = hd(subscriptions)
     end

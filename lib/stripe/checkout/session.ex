@@ -128,7 +128,8 @@ defmodule Stripe.Session do
         }
 
   @type consent_collection :: %{
-          promotions: String.t()
+          promotions: String.t(),
+          terms_of_service: String.t()
         }
 
   @typedoc """
@@ -154,18 +155,28 @@ defmodule Stripe.Session do
           }
         }
 
-  @type line_item :: %{
-          optional(:name) => String.t(),
+  @type line_item_data :: %{
+          optional(:id) => Stripe.id(),
+          optional(:object) => String.t(),
           optional(:quantity) => integer(),
-          optional(:adjustable_quantity) => adjustable_quantity(),
-          optional(:amount) => integer(),
+          optional(:amount_discount) => integer(),
+          optional(:amount_subtotal) => integer(),
+          optional(:amount_tax) => integer(),
+          optional(:amount_total) => integer(),
           optional(:currency) => String.t(),
           optional(:description) => String.t(),
+          optional(:discounts) => list(map),
           optional(:dynamic_tax_rates) => list(String.t()),
-          optional(:images) => list(String.t()),
           optional(:price) => String.t(),
           optional(:price_data) => price_data,
-          optional(:tax_rates) => list(String.t())
+          optional(:taxes) => list(map)
+        }
+
+  @type line_item :: %{
+          optional(:object) => String.t(),
+          optional(:data) => line_item_data(),
+          optional(:has_more) => boolean,
+          optional(:url) => String.t()
         }
 
   @type adjustable_quantity :: %{
@@ -237,9 +248,10 @@ defmodule Stripe.Session do
           optional(:mode) => String.t(),
           optional(:client_reference_id) => String.t(),
           optional(:client_secret) => String.t(),
+          optional(:currency) => String.t(),
           optional(:customer) => String.t(),
           optional(:customer_email) => String.t(),
-          optional(:line_items) => list(line_item),
+          optional(:line_items) => list(line_item_data()),
           optional(:locale) => String.t(),
           optional(:metadata) => Stripe.Types.metadata(),
           optional(:after_expiration) => expiration(),
@@ -270,13 +282,13 @@ defmodule Stripe.Session do
   @type payment_status :: String.t()
 
   @type phone_number_collection :: %{
-    :enabled => boolean()
-  }
+          :enabled => boolean()
+        }
 
   @type shipping_option :: %{
-    :shipping_amount => non_neg_integer(),
-    :shipping_rate => String.t()
-  }
+          :shipping_amount => non_neg_integer(),
+          :shipping_rate => String.t()
+        }
 
   @typedoc """
   One of `"open"`, `"complete"`, or `"expired"`.
@@ -301,8 +313,9 @@ defmodule Stripe.Session do
           customer_creation: customer_creation() | nil,
           customer_details: customer_details() | nil,
           customer_email: String.t(),
-          display_items: list(line_item),
+          line_items: list(line_item),
           expires_at: Stripe.timestamp() | nil,
+          invoice: Stripe.id(),
           livemode: boolean(),
           locale: boolean(),
           metadata: Stripe.Types.metadata(),
@@ -350,8 +363,9 @@ defmodule Stripe.Session do
     :customer_creation,
     :customer_details,
     :customer_email,
-    :display_items,
+    :line_items,
     :expires_at,
+    :invoice,
     :livemode,
     :locale,
     :metadata,

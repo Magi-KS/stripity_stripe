@@ -62,6 +62,12 @@ defmodule Stripe.Util do
   def object_name_to_module("identity.verification_report"),
     do: Stripe.Identity.VerificationReport
 
+  def object_name_to_module("reporting.report_type"),
+    do: Stripe.Reporting.ReportType
+
+  def object_name_to_module("reporting.report_run"),
+    do: Stripe.Reporting.ReportRun
+
   def object_name_to_module("issuing.authorization"), do: Stripe.Issuing.Authorization
   def object_name_to_module("issuing.card"), do: Stripe.Issuing.Card
   def object_name_to_module("issuing.cardholder"), do: Stripe.Issuing.Cardholder
@@ -71,6 +77,7 @@ defmodule Stripe.Util do
   def object_name_to_module("terminal.connection_token"), do: Stripe.Terminal.ConnectionToken
   def object_name_to_module("terminal.location"), do: Stripe.Terminal.Location
   def object_name_to_module("terminal.reader"), do: Stripe.Terminal.Reader
+  def object_name_to_module("test_helpers.test_clock"), do: Stripe.TestClock
 
   def object_name_to_module("usage_record_summary"),
     do: Stripe.SubscriptionItem.UsageRecordSummary

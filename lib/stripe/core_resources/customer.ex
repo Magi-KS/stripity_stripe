@@ -8,6 +8,7 @@ defmodule Stripe.Customer do
   - Retrieve a customer
   - Update a customer
   - Delete a customer
+  - Search customers
 
   Stripe API reference: https://stripe.com/docs/api/customers
   """
@@ -41,7 +42,8 @@ defmodule Stripe.Customer do
           sources: Stripe.List.t(Stripe.Source.t()),
           subscriptions: Stripe.List.t(Stripe.Subscription.t()),
           tax_exempt: String.t() | nil,
-          tax_ids: Stripe.List.t(Stripe.TaxID.t())
+          tax_ids: Stripe.List.t(Stripe.TaxID.t()),
+          test_clock: Stripe.id()
         }
 
   defstruct [
@@ -70,7 +72,8 @@ defmodule Stripe.Customer do
     :sources,
     :subscriptions,
     :tax_exempt,
-    :tax_ids
+    :tax_ids,
+    :test_clock
   ]
 
   @plural_endpoint "customers"
@@ -96,7 +99,8 @@ defmodule Stripe.Customer do
                  optional(:shipping) => Stripe.Types.shipping(),
                  optional(:source) => Stripe.id() | Stripe.Source.t(),
                  optional(:tax_excempt) => String.t(),
-                 optional(:tax_id_data) => Stripe.TaxID.tax_id_data()
+                 optional(:tax_id_data) => Stripe.TaxID.tax_id_data(),
+                 optional(:test_clock) => Stripe.id()
                }
                | %{}
   def create(params, opts \\ []) do
@@ -104,7 +108,7 @@ defmodule Stripe.Customer do
     |> put_endpoint(@plural_endpoint)
     |> put_params(params)
     |> put_method(:post)
-    |> cast_to_id([:coupon, :default_source, :source])
+    |> cast_to_id([:coupon, :default_source, :source, :test_clock])
     |> make_request()
   end
 
@@ -181,6 +185,25 @@ defmodule Stripe.Customer do
     |> put_method(:get)
     |> put_params(params)
     |> cast_to_id([:ending_before, :starting_after])
+    |> make_request()
+  end
+
+  @doc """
+  Search customers
+  """
+  @spec search(params, Stripe.options()) ::
+          {:ok, Stripe.SearchResult.t(t)} | {:error, Stripe.Error.t()}
+        when params: %{
+               :query => Stripe.search_query(),
+               optional(:limit) => 1..100,
+               optional(:page) => String.t()
+             }
+  def search(params, opts \\ []) do
+    new_request(opts)
+    |> prefix_expansions()
+    |> put_endpoint(@plural_endpoint <> "/search")
+    |> put_method(:get)
+    |> put_params(params)
     |> make_request()
   end
 

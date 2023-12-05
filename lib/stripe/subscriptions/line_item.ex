@@ -15,18 +15,22 @@ defmodule Stripe.LineItem do
         }
 
   @type proration_details :: %{
-    credited_items: %{
-      invoice: String.t(),
-      invoice_line_items: [String.t()]
-    } | nil
-  }
+          credited_items:
+            %{
+              invoice: String.t(),
+              invoice_line_items: [String.t()]
+            }
+            | nil
+        }
 
   @type t :: %__MODULE__{
           id: Stripe.id(),
           object: String.t(),
           amount: integer,
+          amount_excluding_tax: integer,
           currency: String.t(),
           description: String.t(),
+          discount_amounts: list(map()),
           discountable: boolean,
           invoice_item: Stripe.id() | nil,
           livemode: boolean,
@@ -51,8 +55,10 @@ defmodule Stripe.LineItem do
     :id,
     :object,
     :amount,
+    :amount_excluding_tax,
     :currency,
     :description,
+    :discount_amounts,
     :discountable,
     :invoice_item,
     :livemode,
